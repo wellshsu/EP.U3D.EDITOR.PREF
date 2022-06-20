@@ -25,7 +25,7 @@ namespace EP.U3D.EDITOR.PREF
         }
 
         public static Type WindowType = typeof(WinPrefs);
-        public static Rect WindowRect = new Rect(30, 30, 255, 430);
+        public static Rect WindowRect = new Rect(30, 30, 255, 455);
         public static bool WindowUtility = false;
         public static string WindowTitle = "Preferences";
         public static Type TargetType = typeof(Preferences);
@@ -49,8 +49,11 @@ namespace EP.U3D.EDITOR.PREF
             [Field("Simulator Width", 95, 50)] [SerializeField] public new int SWidth = 960;
             [Field("Height", 45, 47)] [SerializeField] public new int SHeight = 540;
             [Horizontal]
-            [Field("ScriptBundle", 100)] [SerializeField] public new bool ScriptBundle;
+            [Field("Pauseable", 100)] [SerializeField] public new bool Pauseable;
             [Field("CheckMode", 100)] [SerializeField] public new bool CheckMode;
+            [Horizontal]
+            [Field("ScriptBundle", 100)] [SerializeField] public new bool ScriptBundle;
+            [Field("AssetBundle", 100)] [SerializeField] public new bool AssetBundle;
             [Horizontal]
             [Field("CatVerbose", 100)] [SerializeField] public new bool CatVerbose;
             [Field("CatException", 102)] [SerializeField] public new bool CatException;
@@ -375,6 +378,7 @@ namespace EP.U3D.EDITOR.PREF
                 Action func = new Action(() =>
                 {
                     Helper.SaveText(Target.Path, Helper.ObjectToJson(Helper.ObjectToDict(Target)));
+                    Helper.Log("[FILE@{0}] Apply preferences success.", Target.Path);
                     Helper.CopyFile(Target.Path, Constants.PREF_STEAMING_FILE);
                     AssetDatabase.Refresh();
                     Preferences.Instance = new Preferences(Constants.PREF_STEAMING_FILE);
