@@ -29,13 +29,10 @@ namespace EP.U3D.EDITOR.PREF
         public static bool WindowUtility = false;
         public static string WindowTitle = "Preferences";
         public static Type TargetType = typeof(Preferences);
-        public new Preferences Target;
+        public LIBRARY.BASE.Preferences TTarget;
 
         public class Preferences : LIBRARY.BASE.Preferences
         {
-
-            [NonSerialized] public string Path = string.Empty;
-
             public Preferences(string path = null, Action callback = null) : base(path, callback) { Path = path; }
 
             [Header("Target")]
@@ -88,7 +85,12 @@ namespace EP.U3D.EDITOR.PREF
 
         public override void OnEnable()
         {
-            base.Target = new Preferences();
+            Target = CreateObject();
+        }
+
+        public virtual object CreateObject(string path = null)
+        {
+            return Activator.CreateInstance(TargetType, new object[] { path, null });
         }
 
         public virtual void OnTargetGUI()
@@ -109,7 +111,7 @@ namespace EP.U3D.EDITOR.PREF
             for (int i = 0; i < files.Count; i++)
             {
                 var f = files[i];
-                var p = new Preferences(f);
+                var p = CreateObject(f) as LIBRARY.BASE.Preferences;
                 if (p.Error == null && string.IsNullOrEmpty(p.Name) == false)
                 {
                     names.Add(string.Format("{0} ({1})", p.Name, Path.GetFileName(f)));
@@ -117,13 +119,13 @@ namespace EP.U3D.EDITOR.PREF
             }
             if (currentIndex == -1)
             {
-                var cpref = Target != null ? Target : new Preferences(Constants.PREF_STEAMING_FILE);
+                var cpref = TTarget != null ? TTarget : CreateObject(Constants.PREF_STEAMING_FILE) as LIBRARY.BASE.Preferences;
                 if (cpref.Error == null && string.IsNullOrEmpty(cpref.Name) == false)
                 {
                     for (int i = 0; i < files.Count; i++)
                     {
                         var f = files[i];
-                        var p = new Preferences(f);
+                        var p = CreateObject(f) as LIBRARY.BASE.Preferences;
                         if (p.Error == null && string.IsNullOrEmpty(p.Name) == false && cpref.Name == p.Name)
                         {
                             currentIndex = i;
@@ -132,17 +134,19 @@ namespace EP.U3D.EDITOR.PREF
                     }
                 }
             }
-            if (Target == null)
+            if (TTarget == null)
             {
                 if (currentIndex == -1) currentIndex = 0;
-                Target = new Preferences(files[currentIndex]);
+                Target = CreateObject(files[currentIndex]);
+                TTarget = Target as LIBRARY.BASE.Preferences;
             }
             GUILayout.BeginHorizontal();
             var lastIndex = currentIndex;
             currentIndex = EditorGUILayout.Popup(currentIndex, names.ToArray());
             if (lastIndex != currentIndex)
             {
-                Target = new Preferences(files[currentIndex]);
+                Target = CreateObject(files[currentIndex]);
+                TTarget = Target as LIBRARY.BASE.Preferences;
             }
             if (GUILayout.Button("Path"))
             {
@@ -161,13 +165,13 @@ namespace EP.U3D.EDITOR.PREF
                 if (!string.IsNullOrEmpty(path))
                 {
                     Helper.CopyFile(files[currentIndex], path);
-                    Target = new Preferences(path);
-                    Target.Name = Path.GetFileNameWithoutExtension(path);
-                    Helper.SaveText(Target.Path, Helper.ObjectToJson(Helper.ObjectToDict(Target)));
+                    Target = CreateObject(path);
+                    TTarget = Target as LIBRARY.BASE.Preferences;
+                    TTarget.Name = Path.GetFileNameWithoutExtension(path);
+                    Helper.SaveText(TTarget.Path, Helper.ObjectToJson(Helper.ObjectToDict(TTarget)));
                     currentIndex = -1;
                 }
             }
-            base.Target = Target;
             GUILayout.EndHorizontal();
         }
 
@@ -238,9 +242,9 @@ namespace EP.U3D.EDITOR.PREF
             }
             else
             {
-                string[] strs = Target.CgiServer.ToArray();
+                string[] strs = TTarget.CgiServer.ToArray();
                 for (int i = 0; i < strs.Length; i++) strs[i] = strs[i].Replace('/', '\u2215');
-                Target.CgiIndex = EditorGUILayout.Popup(Target.CgiIndex, strs, GUILayout.Width(125));
+                TTarget.CgiIndex = EditorGUILayout.Popup(TTarget.CgiIndex, strs, GUILayout.Width(125));
             }
             if (!cgiServerEdit)
             {
@@ -250,10 +254,10 @@ namespace EP.U3D.EDITOR.PREF
                 }
                 if (GUILayout.Button("-"))
                 {
-                    if (Target.CgiServer[Target.CgiIndex] != "NONE")
+                    if (TTarget.CgiServer[TTarget.CgiIndex] != "NONE")
                     {
-                        Target.CgiServer.RemoveAt(Target.CgiIndex);
-                        Target.CgiIndex--;
+                        TTarget.CgiServer.RemoveAt(TTarget.CgiIndex);
+                        TTarget.CgiIndex--;
                     }
                 }
             }
@@ -271,10 +275,10 @@ namespace EP.U3D.EDITOR.PREF
                         }
                         if (finish)
                         {
-                            Target.CgiServer.Add(cgiServerTemp);
+                            TTarget.CgiServer.Add(cgiServerTemp);
                             cgiServerTemp = "";
                             cgiServerEdit = false;
-                            Target.CgiIndex = Target.CgiServer.Count - 1;
+                            TTarget.CgiIndex = TTarget.CgiServer.Count - 1;
                         }
                     }
                 }
@@ -297,7 +301,7 @@ namespace EP.U3D.EDITOR.PREF
             }
             else
             {
-                Target.ConnIndex = EditorGUILayout.Popup(Target.ConnIndex, Target.ConnServer.ToArray(), GUILayout.Width(125));
+                TTarget.ConnIndex = EditorGUILayout.Popup(TTarget.ConnIndex, TTarget.ConnServer.ToArray(), GUILayout.Width(125));
             }
             if (!connServerEdit)
             {
@@ -307,10 +311,10 @@ namespace EP.U3D.EDITOR.PREF
                 }
                 if (GUILayout.Button("-"))
                 {
-                    if (Target.ConnServer[Target.ConnIndex] != "NONE")
+                    if (TTarget.ConnServer[TTarget.ConnIndex] != "NONE")
                     {
-                        Target.ConnServer.RemoveAt(Target.ConnIndex);
-                        Target.ConnIndex--;
+                        TTarget.ConnServer.RemoveAt(TTarget.ConnIndex);
+                        TTarget.ConnIndex--;
                     }
                 }
             }
@@ -329,10 +333,10 @@ namespace EP.U3D.EDITOR.PREF
                         }
                         if (finish)
                         {
-                            Target.ConnServer.Add(connServerTemp);
+                            TTarget.ConnServer.Add(connServerTemp);
                             connServerTemp = "";
                             connServerEdit = false;
-                            Target.ConnIndex = Target.ConnServer.Count - 1;
+                            TTarget.ConnIndex = TTarget.ConnServer.Count - 1;
                         }
                     }
                 }
@@ -351,12 +355,12 @@ namespace EP.U3D.EDITOR.PREF
             {
                 Action func = new Action(() =>
                 {
-                    Helper.SaveText(Target.Path, Helper.ObjectToJson(Helper.ObjectToDict(Target)));
-                    Helper.Log("[FILE@{0}] Save preferences success.", Target.Path);
+                    Helper.SaveText(TTarget.Path, Helper.ObjectToJson(Helper.ObjectToDict(TTarget)));
+                    Helper.Log("[FILE@{0}] Save preferences success.", TTarget.Path);
                     Helper.ShowToast("Save preferences success.");
                     EditorLogcat.Reset();
                 });
-                if (Target.Path.EndsWith(Constants.PREF_DEFALUT_FILE))
+                if (TTarget.Path.EndsWith(Constants.PREF_DEFALUT_FILE))
                 {
                     if (EditorUtility.DisplayDialogComplex("Warning", "You are saving the default prefs, please clone it and edit the copy.",
                         "Don't Save", "Dismiss", "Save") == 2)
@@ -377,22 +381,22 @@ namespace EP.U3D.EDITOR.PREF
             {
                 Action func = new Action(() =>
                 {
-                    Helper.SaveText(Target.Path, Helper.ObjectToJson(Helper.ObjectToDict(Target)));
-                    Helper.Log("[FILE@{0}] Apply preferences success.", Target.Path);
-                    Helper.CopyFile(Target.Path, Constants.PREF_STEAMING_FILE);
+                    Helper.SaveText(TTarget.Path, Helper.ObjectToJson(Helper.ObjectToDict(TTarget)));
+                    Helper.Log("[FILE@{0}] Apply preferences success.", TTarget.Path);
+                    Helper.CopyFile(TTarget.Path, Constants.PREF_STEAMING_FILE);
                     AssetDatabase.Refresh();
-                    Preferences.Instance = new Preferences(Constants.PREF_STEAMING_FILE);
+                    Preferences.Instance = CreateObject(Constants.PREF_STEAMING_FILE) as Preferences;
                     if (File.Exists(Constants.SIMULATOR_EXE))
                     {
                         var dest = Path.GetDirectoryName(Constants.SIMULATOR_EXE) + "/" +
                         Path.GetFileNameWithoutExtension(Constants.SIMULATOR_EXE) + "_Data/StreamingAssets/" +
                         Path.GetFileName(Constants.PREF_STEAMING_FILE);
-                        File.Copy(Target.Path, dest, true);
+                        File.Copy(TTarget.Path, dest, true);
                         Helper.ShowToast("Apply preferences success.");
                     }
                     EditorLogcat.Reset();
                 });
-                if (Target.Path.EndsWith(Constants.PREF_DEFALUT_FILE))
+                if (TTarget.Path.EndsWith(Constants.PREF_DEFALUT_FILE))
                 {
                     if (EditorUtility.DisplayDialogComplex("Warning", "You are saving the default prefs, please clone it and edit the copy.",
                     "Don't Save", "Dismiss", "Save") == 2)
@@ -409,9 +413,9 @@ namespace EP.U3D.EDITOR.PREF
 
         private bool Validate()
         {
-            if (!string.IsNullOrEmpty(Target.ListenLog))
+            if (!string.IsNullOrEmpty(TTarget.ListenLog))
             {
-                var strs = Target.ListenLog.Split(':');
+                var strs = TTarget.ListenLog.Split(':');
                 if (strs.Length != 2)
                 {
                     Helper.ShowToast("ListenLog is invalid, name it like '127.0.0.1:50000'");
@@ -419,9 +423,9 @@ namespace EP.U3D.EDITOR.PREF
                 }
             }
 
-            if (!string.IsNullOrEmpty(Target.PushPatch))
+            if (!string.IsNullOrEmpty(TTarget.PushPatch))
             {
-                var strs = Target.PushPatch.Split(':');
+                var strs = TTarget.PushPatch.Split(':');
                 if (strs.Length != 2)
                 {
                     Helper.ShowToast("PushPatch is invalid, name it like '127.0.0.1:50000'");
@@ -429,13 +433,13 @@ namespace EP.U3D.EDITOR.PREF
                 }
             }
 
-            if (!string.IsNullOrEmpty(Target.PatchServer) && !(Target.PatchServer.StartsWith("http://") || Target.PatchServer.StartsWith("https://")))
+            if (!string.IsNullOrEmpty(TTarget.PatchServer) && !(TTarget.PatchServer.StartsWith("http://") || TTarget.PatchServer.StartsWith("https://")))
             {
                 Helper.ShowToast("PatchServer is invalid, name it's prefix with 'http://' or 'https://'");
                 return false;
             }
 
-            if (!string.IsNullOrEmpty(Target.LogServer) && !(Target.LogServer.StartsWith("http://") || Target.LogServer.StartsWith("https://")))
+            if (!string.IsNullOrEmpty(TTarget.LogServer) && !(TTarget.LogServer.StartsWith("http://") || TTarget.LogServer.StartsWith("https://")))
             {
                 Helper.ShowToast("LogServer is invalid, name it's prefix with 'http://' or 'https://'");
                 return false;
@@ -449,10 +453,10 @@ namespace EP.U3D.EDITOR.PREF
                     Helper.ShowToast("ConnServer is invalid, name it like '127.0.0.1:50000'");
                     return false;
                 }
-                Target.ConnServer.Add(connServerTemp);
+                TTarget.ConnServer.Add(connServerTemp);
                 connServerTemp = "";
                 connServerEdit = false;
-                Target.ConnIndex = Target.ConnServer.Count - 1;
+                TTarget.ConnIndex = TTarget.ConnServer.Count - 1;
             }
 
             if (cgiServerEdit && !string.IsNullOrEmpty(cgiServerTemp))
@@ -462,10 +466,10 @@ namespace EP.U3D.EDITOR.PREF
                     Helper.ShowToast("CgiServer is invalid, name it's prefix with 'http://' or 'https://'");
                     return false;
                 }
-                Target.CgiServer.Add(cgiServerTemp);
+                TTarget.CgiServer.Add(cgiServerTemp);
                 cgiServerTemp = "";
                 cgiServerEdit = false;
-                Target.CgiIndex = Target.CgiServer.Count - 1;
+                TTarget.CgiIndex = TTarget.CgiServer.Count - 1;
             }
             return true;
         }
