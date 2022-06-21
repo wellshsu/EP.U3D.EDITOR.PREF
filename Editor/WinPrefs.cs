@@ -86,6 +86,7 @@ namespace EP.U3D.EDITOR.PREF
         public override void OnEnable()
         {
             Target = CreateObject();
+            TTarget = null;
         }
 
         public virtual object CreateObject(string path = null)
